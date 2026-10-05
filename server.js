@@ -930,16 +930,25 @@ app.get('/api/admin/stats', authenticateAdmin, (req, res) => {
 
 // Route for /admin to serve admin.html
 app.get('/admin', (req, res) => {
+  const adminPublic = path.join(__dirname, 'public', 'admin.html');
+  if (fs.existsSync(adminPublic)) {
+    return res.sendFile(adminPublic);
+  }
   res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
 // --------------------------------------------------------------------------
 // Serve Static Frontend Assets
 // --------------------------------------------------------------------------
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname)));
 
 // Fallback to index.html for SPA routing
 app.get('*', (req, res) => {
+  const indexPublic = path.join(__dirname, 'public', 'index.html');
+  if (fs.existsSync(indexPublic)) {
+    return res.sendFile(indexPublic);
+  }
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
