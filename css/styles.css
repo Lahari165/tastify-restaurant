@@ -3297,37 +3297,72 @@ h1, h2, h3, h4 {
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
 }
 
-.input-with-icon svg:first-child {
+.input-with-icon > svg:first-child {
   position: absolute;
   left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
   color: var(--color-sand-muted);
   pointer-events: none;
+  z-index: 2;
+  width: 16px;
+  height: 16px;
 }
 
 .input-with-icon .form-control {
   padding-left: 2.75rem;
-  padding-right: 2.75rem;
+  padding-right: 2.85rem;
   width: 100%;
+}
+
+.input-with-icon.no-left-icon .form-control {
+  padding-left: 1rem;
 }
 
 .pwd-toggle-btn {
   position: absolute;
-  right: 12px;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
   background: transparent;
   border: none;
   color: var(--color-sand-muted);
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px;
-  transition: color 0.2s ease;
+  padding: 0;
+  z-index: 10;
+  transition: color 0.2s ease, background 0.2s ease;
+  user-select: none;
 }
 
-.pwd-toggle-btn:hover {
-  color: var(--color-cream);
+.pwd-toggle-btn:hover,
+.pwd-toggle-btn:focus-visible {
+  color: var(--color-gold);
+  background: rgba(198, 154, 85, 0.12);
+  outline: none;
+}
+
+.pwd-toggle-btn svg {
+  pointer-events: none;
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+}
+
+/* Hide native Edge / IE password reveal and clear buttons to avoid conflict */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 .auth-aux-row {

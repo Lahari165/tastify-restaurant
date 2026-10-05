@@ -53,21 +53,31 @@ function getShareMessage() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  initTheme();
-  initNavbar();
-  initHeroAnimations();
-  loadMenuData();
-  loadReviewsData();
-  initReviewsCarousel();
-  initCounters();
-  initCustomerAuthSystem();
-  initOrderAndCartSystem();
-  initReservationModal();
-  initShareModal();
-  initReviewSubmissionModal();
-  initGalleryLightbox();
-  initBackToTop();
-  updateConfigBindings();
+  const initSteps = [
+    { name: "Theme", fn: initTheme },
+    { name: "Navbar", fn: initNavbar },
+    { name: "HeroAnimations", fn: initHeroAnimations },
+    { name: "CustomerAuth", fn: initCustomerAuthSystem },
+    { name: "OrderAndCart", fn: initOrderAndCartSystem },
+    { name: "ReservationModal", fn: initReservationModal },
+    { name: "ShareModal", fn: initShareModal },
+    { name: "ReviewSubmissionModal", fn: initReviewSubmissionModal },
+    { name: "GalleryLightbox", fn: initGalleryLightbox },
+    { name: "BackToTop", fn: initBackToTop },
+    { name: "MenuData", fn: loadMenuData },
+    { name: "ReviewsData", fn: loadReviewsData },
+    { name: "ReviewsCarousel", fn: initReviewsCarousel },
+    { name: "Counters", fn: initCounters },
+    { name: "ConfigBindings", fn: updateConfigBindings }
+  ];
+
+  initSteps.forEach(step => {
+    try {
+      if (typeof step.fn === 'function') step.fn();
+    } catch (err) {
+      console.error(`[Tastify] Initialization error in ${step.name}:`, err);
+    }
+  });
 });
 
 // --------------------------------------------------------------------------
@@ -189,10 +199,22 @@ function initNavbar() {
       }
     };
 
+    window.closeMobileMenu = () => toggleMenu(false);
+    window.toggleMobileMenu = (open) => toggleMenu(open);
+
     hamburger.addEventListener("click", () => toggleMenu());
     mobileLinks.forEach(link => {
       link.addEventListener("click", () => toggleMenu(false));
     });
+
+    // Close mobile drawer when any action button or link inside is clicked (except theme cycler)
+    mobileMenu.querySelectorAll("button, a").forEach(el => {
+      if (!el.classList.contains("theme-switch-btn")) {
+        el.addEventListener("click", () => toggleMenu(false));
+      }
+    });
+  } else {
+    window.closeMobileMenu = () => {};
   }
 }
 
@@ -325,7 +347,9 @@ function initMenu() {
       btn.addEventListener("click", (e) => {
         e.preventDefault();
         const dishId = btn.getAttribute("data-dish-id");
-        addToCart(dishId);
+        if (typeof window.addToCart === 'function') {
+          window.addToCart(dishId);
+        }
       });
     });
   };
@@ -359,8 +383,28 @@ function initOrderAndCartSystem() {
   const orderTriggers = document.querySelectorAll(".btn-order-trigger");
   const orderForm = document.getElementById("order-checkout-form");
 
-  window.addToCart = (dishId) => {
-    const dish = window.MENU_ITEMS.find(d => d.id === dishId);
+  function updateCartUI() {
+    const totalCount = window.cart.reduce((sum, item) => sum + item.quantity, 0);
+    const subtotal = window.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+    // Update floating cart bar
+    if (cartBar && cartCountEl && cartTotalEl) {
+      if (totalCount > 0) {
+        cartCountEl.textContent = totalCount;
+        cartTotalEl.textContent = `₹${subtotal}`;
+        cartBar.classList.add("active");
+      } else {
+        cartBar.classList.remove("active");
+      }
+    }
+
+    // Update modal cart list if open
+    renderModalCartItems();
+  }
+  window.updateCartUI = updateCartUI;
+
+  function addToCart(dishId) {
+    const dish = (window.MENU_ITEMS || []).find(d => d.id === dishId);
     if (!dish) return;
 
     const existing = window.cart.find(i => i.id === dishId);
@@ -378,9 +422,10 @@ function initOrderAndCartSystem() {
 
     showToast(`Added ${dish.name} to order!`);
     updateCartUI();
-  };
+  }
+  window.addToCart = addToCart;
 
-  window.updateCartQty = (dishId, delta) => {
+  function updateCartQty(dishId, delta) {
     const item = window.cart.find(i => i.id === dishId);
     if (!item) return;
 
@@ -389,26 +434,8 @@ function initOrderAndCartSystem() {
       window.cart = window.cart.filter(i => i.id !== dishId);
     }
     updateCartUI();
-  };
-
-  window.updateCartUI = () => {
-    const totalCount = window.cart.reduce((sum, item) => sum + item.quantity, 0);
-    const subtotal = window.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
-    // Update floating cart bar
-    if (cartBar && cartCountEl && cartTotalEl) {
-      if (totalCount > 0) {
-        cartCountEl.textContent = totalCount;
-        cartTotalEl.textContent = `₹${subtotal}`;
-        cartBar.classList.add("active");
-      } else {
-        cartBar.classList.remove("active");
-      }
-    }
-
-    // Update modal cart list if open
-    renderModalCartItems();
-  };
+  }
+  window.updateCartQty = updateCartQty;
 
   function renderModalCartItems() {
     const listContainer = document.getElementById("cart-items-list");
@@ -468,14 +495,15 @@ function initOrderAndCartSystem() {
   }
 
   // Toggle order modal
-  window.openOrderModal = () => {
+  function openOrderModal() {
+    if (window.closeMobileMenu) window.closeMobileMenu();
     const config = window.RESTAURANT_CONFIG;
     if (config && config.ORDER_URL && config.ORDER_URL.trim() !== "") {
       window.open(config.ORDER_URL, "_blank");
       return;
     }
 
-    if (window.prefillCustomerCheckout) {
+    if (typeof window.prefillCustomerCheckout === 'function') {
       window.prefillCustomerCheckout();
     }
 
@@ -484,31 +512,36 @@ function initOrderAndCartSystem() {
       orderModal.classList.add("active");
       document.body.style.overflow = "hidden";
     }
-  };
+  }
+  window.openOrderModal = openOrderModal;
+
+  function closeOrderModal() {
+    if (orderModal) {
+      orderModal.classList.remove("active");
+      document.body.style.overflow = "";
+    }
+  }
+  window.closeOrderModal = closeOrderModal;
 
   orderTriggers.forEach(btn => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
-      window.openOrderModal();
+      openOrderModal();
     });
   });
 
   if (openCartBtn) {
-    openCartBtn.addEventListener("click", () => window.openOrderModal());
+    openCartBtn.addEventListener("click", () => openOrderModal());
   }
 
   if (modalClose) {
-    modalClose.addEventListener("click", () => {
-      orderModal.classList.remove("active");
-      document.body.style.overflow = "";
-    });
+    modalClose.addEventListener("click", () => closeOrderModal());
   }
 
   if (orderModal) {
     orderModal.addEventListener("click", (e) => {
       if (e.target === orderModal) {
-        orderModal.classList.remove("active");
-        document.body.style.overflow = "";
+        closeOrderModal();
       }
     });
   }
@@ -1597,9 +1630,75 @@ function initCustomerAuthSystem() {
   const profileAlert = document.getElementById("cust-profile-alert");
   const btnCancelProfileEdit = document.getElementById("btn-cancel-profile-edit");
 
-  // Load active session from localStorage
-  loadCustomerSession();
-  syncCustomerWithBackend();
+  // Pre-fill checkout with customer details (HOISTED function declaration)
+  function prefillCustomerCheckout() {
+    if (!window.currentCustomer) return;
+    const c = window.currentCustomer;
+    const nameInput = document.getElementById("order-name");
+    const phoneInput = document.getElementById("order-phone");
+    const line1Input = document.getElementById("order-address-line1");
+    const landmarkInput = document.getElementById("order-address-landmark");
+
+    if (nameInput && (!nameInput.value || nameInput.value.trim() === '')) {
+      nameInput.value = c.name || '';
+    }
+    if (phoneInput && (!phoneInput.value || phoneInput.value.trim() === '')) {
+      phoneInput.value = c.phone || '';
+    }
+    if (c.address) {
+      if (line1Input && (!line1Input.value || line1Input.value.trim() === '')) {
+        line1Input.value = c.address.line1 || '';
+      }
+      if (landmarkInput && (!landmarkInput.value || landmarkInput.value.trim() === '')) {
+        landmarkInput.value = c.address.landmark || '';
+      }
+    }
+  }
+  window.prefillCustomerCheckout = prefillCustomerCheckout;
+
+  // Auth Modal Open/Close helpers
+  function openCustomerAuthModal(tab = 'signin') {
+    if (window.closeMobileMenu) window.closeMobileMenu();
+    if (authAlert) authAlert.style.display = 'none';
+    switchAuthTab(tab);
+    if (authModal) {
+      authModal.classList.add("active");
+      document.body.style.overflow = "hidden";
+    }
+  }
+  window.openCustomerAuthModal = openCustomerAuthModal;
+
+  function closeCustomerAuthModal() {
+    if (authModal) {
+      authModal.classList.remove("active");
+      document.body.style.overflow = "";
+    }
+  }
+  window.closeCustomerAuthModal = closeCustomerAuthModal;
+
+  // Profile Modal Open/Close helpers
+  function openCustomerProfileModal(tab = 'orders') {
+    if (window.closeMobileMenu) window.closeMobileMenu();
+    if (!window.currentCustomer) {
+      openCustomerAuthModal('signin');
+      return;
+    }
+    if (profileAlert) profileAlert.style.display = 'none';
+    switchProfileTab(tab);
+    if (profileModal) {
+      profileModal.classList.add("active");
+      document.body.style.overflow = "hidden";
+    }
+  }
+  window.openCustomerProfileModal = openCustomerProfileModal;
+
+  function closeCustomerProfileModal() {
+    if (profileModal) {
+      profileModal.classList.remove("active");
+      document.body.style.overflow = "";
+    }
+  }
+  window.closeCustomerProfileModal = closeCustomerProfileModal;
 
   function loadCustomerSession() {
     try {
@@ -1667,7 +1766,7 @@ function initCustomerAuthSystem() {
         checkoutBannerText.innerHTML = `<span>Signed in as <strong>${escapeHtml(c.name)}</strong> (${c.phone || c.email}). Delivery details are auto-filled.</span>`;
       }
 
-      window.prefillCustomerCheckout();
+      prefillCustomerCheckout();
     } else {
       if (loginBtn) loginBtn.style.display = "inline-flex";
       if (profilePill) profilePill.style.display = "none";
@@ -1678,73 +1777,11 @@ function initCustomerAuthSystem() {
         checkoutBannerText.innerHTML = `<span>Have a Tastify account?</span> <button type="button" class="banner-link-btn btn-cust-auth-trigger">Sign In for saved address &amp; fast checkout</button>`;
         const newLink = checkoutBannerText.querySelector(".btn-cust-auth-trigger");
         if (newLink) {
-          newLink.addEventListener("click", () => window.openCustomerAuthModal('signin'));
+          newLink.addEventListener("click", () => openCustomerAuthModal('signin'));
         }
       }
     }
   }
-
-  window.prefillCustomerCheckout = () => {
-    if (!window.currentCustomer) return;
-    const c = window.currentCustomer;
-    const nameInput = document.getElementById("order-name");
-    const phoneInput = document.getElementById("order-phone");
-    const line1Input = document.getElementById("order-address-line1");
-    const landmarkInput = document.getElementById("order-address-landmark");
-
-    if (nameInput && (!nameInput.value || nameInput.value.trim() === '')) {
-      nameInput.value = c.name || '';
-    }
-    if (phoneInput && (!phoneInput.value || phoneInput.value.trim() === '')) {
-      phoneInput.value = c.phone || '';
-    }
-    if (c.address) {
-      if (line1Input && (!line1Input.value || line1Input.value.trim() === '')) {
-        line1Input.value = c.address.line1 || '';
-      }
-      if (landmarkInput && (!landmarkInput.value || landmarkInput.value.trim() === '')) {
-        landmarkInput.value = c.address.landmark || '';
-      }
-    }
-  };
-
-  // Auth Modal Open/Close
-  window.openCustomerAuthModal = (tab = 'signin') => {
-    if (authAlert) authAlert.style.display = 'none';
-    switchAuthTab(tab);
-    if (authModal) {
-      authModal.classList.add("active");
-      document.body.style.overflow = "hidden";
-    }
-  };
-
-  window.closeCustomerAuthModal = () => {
-    if (authModal) {
-      authModal.classList.remove("active");
-      document.body.style.overflow = "";
-    }
-  };
-
-  // Profile Modal Open/Close
-  window.openCustomerProfileModal = (tab = 'orders') => {
-    if (!window.currentCustomer) {
-      window.openCustomerAuthModal('signin');
-      return;
-    }
-    if (profileAlert) profileAlert.style.display = 'none';
-    switchProfileTab(tab);
-    if (profileModal) {
-      profileModal.classList.add("active");
-      document.body.style.overflow = "hidden";
-    }
-  };
-
-  window.closeCustomerProfileModal = () => {
-    if (profileModal) {
-      profileModal.classList.remove("active");
-      document.body.style.overflow = "";
-    }
-  };
 
   function switchAuthTab(tabName) {
     if (authAlert) authAlert.style.display = 'none';
@@ -1834,19 +1871,41 @@ function initCustomerAuthSystem() {
     }
   });
 
-  // Password visibility toggles
+  // Password visibility toggles with SVG icon swapping and visual feedback
+  const SVG_EYE_OPEN = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+  const SVG_EYE_SLASH = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+
+  function updatePwdToggleUI(btn, isVisible) {
+    if (!btn) return;
+    btn.innerHTML = isVisible ? SVG_EYE_SLASH : SVG_EYE_OPEN;
+    btn.style.color = isVisible ? 'var(--color-gold)' : 'var(--color-sand-muted)';
+    const label = isVisible ? 'Hide password' : 'Show password';
+    btn.setAttribute('aria-label', label);
+    btn.setAttribute('title', label);
+  }
+
   function setupPwdToggle(btnId, inputId) {
     const btn = document.getElementById(btnId);
     const input = document.getElementById(inputId);
     if (!btn || !input) return;
-    btn.addEventListener("click", () => {
-      const isPwd = input.type === 'password';
-      input.type = isPwd ? 'text' : 'password';
-      btn.style.color = isPwd ? 'var(--color-gold)' : 'var(--color-sand-muted)';
+
+    // Set initial icon and labels
+    updatePwdToggleUI(btn, input.type === 'text');
+
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const isCurrentlyText = input.type === 'text';
+      input.type = isCurrentlyText ? 'password' : 'text';
+      updatePwdToggleUI(btn, !isCurrentlyText);
+      try { input.focus(); } catch (err) {}
     });
   }
+
   setupPwdToggle("btn-toggle-login-pwd", "cust-login-password");
   setupPwdToggle("btn-toggle-reg-pwd", "cust-reg-password");
+  setupPwdToggle("btn-toggle-profile-cur-pwd", "edit-profile-cur-pwd");
+  setupPwdToggle("btn-toggle-profile-new-pwd", "edit-profile-new-pwd");
 
   // Navbar dropdown toggle
   if (pillToggleBtn && navDropdown) {
@@ -2305,4 +2364,127 @@ function initCustomerAuthSystem() {
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
   }
+
+  // Safely load active customer session after all helpers & elements are bound
+  loadCustomerSession();
+  syncCustomerWithBackend();
 }
+
+// --------------------------------------------------------------------------
+// Universal Document Event Delegation for Customer Website Buttons
+// Guarantees all interactive buttons (password toggle, auth, tabs, order, 
+// cart, reservations, share) work even if dynamically rendered or refreshed.
+// --------------------------------------------------------------------------
+document.addEventListener("click", (e) => {
+  // 1. Universal Password Visibility Toggle
+  const toggleBtn = e.target.closest(".pwd-toggle-btn");
+  if (toggleBtn) {
+    e.preventDefault();
+    e.stopPropagation();
+    let targetInput = null;
+    const forId = toggleBtn.getAttribute("data-for");
+    if (forId) targetInput = document.getElementById(forId);
+    if (!targetInput) {
+      const container = toggleBtn.closest(".input-with-icon") || toggleBtn.parentElement;
+      if (container) targetInput = container.querySelector("input");
+    }
+    if (targetInput) {
+      const isCurrentlyText = targetInput.type === 'text';
+      targetInput.type = isCurrentlyText ? 'password' : 'text';
+      const isVisible = !isCurrentlyText;
+      toggleBtn.innerHTML = isVisible
+        ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`
+        : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+      toggleBtn.style.color = isVisible ? 'var(--color-gold)' : 'var(--color-sand-muted)';
+      const label = isVisible ? 'Hide password' : 'Show password';
+      toggleBtn.setAttribute('aria-label', label);
+      toggleBtn.setAttribute('title', label);
+      try { targetInput.focus(); } catch (err) {}
+    }
+    return;
+  }
+
+  // 2. Customer Auth Trigger (.btn-cust-auth-trigger)
+  const authTrigger = e.target.closest(".btn-cust-auth-trigger");
+  if (authTrigger) {
+    e.preventDefault();
+    if (window.closeMobileMenu) window.closeMobileMenu();
+    if (window.currentCustomer) {
+      if (typeof window.openCustomerProfileModal === 'function') {
+        window.openCustomerProfileModal('orders');
+      }
+    } else {
+      if (typeof window.openCustomerAuthModal === 'function') {
+        window.openCustomerAuthModal('signin');
+      }
+    }
+    return;
+  }
+
+  // 3. Auth Tab Switch (.link-switch-tab or .auth-tab-btn[data-tab])
+  const tabLink = e.target.closest(".link-switch-tab");
+  if (tabLink) {
+    e.preventDefault();
+    const target = tabLink.getAttribute("data-target") || 'signin';
+    if (typeof window.switchCustomerAuthTab === 'function') {
+      window.switchCustomerAuthTab(target);
+    }
+    return;
+  }
+
+  // 4. Order / Cart Trigger (.btn-order-trigger, #btn-open-cart)
+  const orderTrigger = e.target.closest(".btn-order-trigger, #btn-open-cart");
+  if (orderTrigger) {
+    e.preventDefault();
+    if (window.closeMobileMenu) window.closeMobileMenu();
+    if (typeof window.openOrderModal === 'function') {
+      window.openOrderModal();
+    }
+    return;
+  }
+
+  // 5. Add to Cart (.btn-add-cart)
+  const addCartBtn = e.target.closest(".btn-add-cart");
+  if (addCartBtn) {
+    e.preventDefault();
+    const dishId = addCartBtn.getAttribute("data-dish-id");
+    if (dishId && typeof window.addToCart === 'function') {
+      window.addToCart(dishId);
+    }
+    return;
+  }
+
+  // 6. Table Reservation Trigger (.btn-reserve-trigger)
+  const reserveTrigger = e.target.closest(".btn-reserve-trigger");
+  if (reserveTrigger) {
+    e.preventDefault();
+    if (window.closeMobileMenu) window.closeMobileMenu();
+    if (typeof window.openReservationModal === 'function') {
+      window.openReservationModal();
+    }
+    return;
+  }
+
+  // 7. Share Modal Trigger (.btn-share-trigger)
+  const shareTrigger = e.target.closest(".btn-share-trigger");
+  if (shareTrigger) {
+    e.preventDefault();
+    if (window.closeMobileMenu) window.closeMobileMenu();
+    if (typeof window.openShareModal === 'function') {
+      window.openShareModal();
+    }
+    return;
+  }
+});
+
+// Global Escape Key to close open modals
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    if (typeof window.closeCustomerAuthModal === 'function') window.closeCustomerAuthModal();
+    if (typeof window.closeCustomerProfileModal === 'function') window.closeCustomerProfileModal();
+    if (typeof window.closeOrderModal === 'function') window.closeOrderModal();
+    if (typeof window.closeReservationModal === 'function') window.closeReservationModal();
+    if (typeof window.closeShareModal === 'function') window.closeShareModal();
+    if (typeof window.closeMobileMenu === 'function') window.closeMobileMenu();
+  }
+});
