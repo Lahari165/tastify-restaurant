@@ -255,7 +255,7 @@
     }
   }
 
-  function handleUnauthorized() {
+  function handleUnauthorized(showMsg = true) {
     STATE.token = null;
     STATE.user = null;
     localStorage.removeItem('tastify_admin_token');
@@ -264,7 +264,11 @@
     clearInterval(STATE.countdownInterval);
     DOM.dashboardApp.style.display = 'none';
     DOM.loginScreen.style.display = 'flex';
-    showLoginAlert('Your session has expired. Please sign in again.', 'error');
+    if (showMsg) {
+      showLoginAlert('Your session has expired. Please sign in again.', 'error');
+    } else {
+      DOM.loginAlert.style.display = 'none';
+    }
   }
 
   function showLoginAlert(msg, type = 'error') {
@@ -284,18 +288,29 @@
 
     if (STATE.token) {
       try {
-        const verifyRes = await apiFetch('/api/admin/verify');
-        if (verifyRes.success) {
-          STATE.user = verifyRes.user;
-          enterDashboard();
-          return;
+        const verifyRes = await fetch('/api/admin/verify', {
+          headers: {
+            'Authorization': `Bearer ${STATE.token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        if (verifyRes.ok) {
+          const data = await verifyRes.json();
+          if (data && data.success) {
+            STATE.user = data.user;
+            enterDashboard();
+            return;
+          }
         }
+        // Stale or invalid token from prior session — clean silently
+        handleUnauthorized(false);
       } catch (err) {
-        console.log('Session verification failed, showing login screen');
+        console.log('Session verification error, showing clean login screen');
+        handleUnauthorized(false);
       }
     }
 
-    // Default: Show login screen
+    // Default: Show clean login screen
     DOM.loginScreen.style.display = 'flex';
     DOM.dashboardApp.style.display = 'none';
   }

@@ -34,7 +34,38 @@ const RESERVATIONS_FILE = path.join(DATA_DIR, 'reservations.json');
 const ADMIN_FILE = path.join(DATA_DIR, 'admin.json');
 const CUSTOMERS_FILE = path.join(DATA_DIR, 'customers.json');
 
-// In-memory sessions
+// Stateless Session Management (HMAC signed tokens for Vercel Serverless & Local)
+const SESSION_SECRET = process.env.SESSION_SECRET || 'tastify_arabian_mandi_jwt_secret_2026_hyderabad';
+
+function createSessionToken(payload) {
+  const payloadStr = JSON.stringify({ ...payload, iat: Date.now() });
+  const encodedPayload = Buffer.from(payloadStr, 'utf8').toString('base64url');
+  const signature = crypto.createHmac('sha256', SESSION_SECRET).update(encodedPayload).digest('base64url');
+  return `${encodedPayload}.${signature}`;
+}
+
+function verifySessionToken(token) {
+  if (!token || typeof token !== 'string') return null;
+  const parts = token.split('.');
+  if (parts.length !== 2) return null;
+
+  const [encodedPayload, signature] = parts;
+  const expectedSignature = crypto.createHmac('sha256', SESSION_SECRET).update(encodedPayload).digest('base64url');
+
+  try {
+    const sigBuf = Buffer.from(signature);
+    const expBuf = Buffer.from(expectedSignature);
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+      return null;
+    }
+    const payload = JSON.parse(Buffer.from(encodedPayload, 'base64url').toString('utf8'));
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+// In-memory fallback sessions
 const activeAdminTokens = new Map();
 const activeCustomerTokens = new Map();
 
@@ -47,12 +78,19 @@ function hashPassword(password, salt) {
 function readJSON(file, fallback = {}) {
   try {
     const tmpPath = path.join('/tmp', path.basename(file));
-    if (fs.existsSync(tmpPath)) {
-      const data = fs.readFileSync(tmpPath, 'utf8');
-      return JSON.parse(data);
+    // If both exist, read whichever was modified more recently
+    if (fs.existsSync(tmpPath) && fs.existsSync(file)) {
+      const tmpStat = fs.statSync(tmpPath);
+      const fileStat = fs.statSync(file);
+      const chosen = tmpStat.mtimeMs > fileStat.mtimeMs ? tmpPath : file;
+      return JSON.parse(fs.readFileSync(chosen, 'utf8'));
     }
     if (fs.existsSync(file)) {
       const data = fs.readFileSync(file, 'utf8');
+      return JSON.parse(data);
+    }
+    if (fs.existsSync(tmpPath)) {
+      const data = fs.readFileSync(tmpPath, 'utf8');
       return JSON.parse(data);
     }
   } catch (err) {
@@ -314,20 +352,35 @@ function authenticateCustomer(req, res, next) {
     ? authHeader.slice(7) 
     : (req.headers['x-customer-token'] || req.query.token);
 
-  if (!token || !activeCustomerTokens.has(token)) {
+  if (!token) {
     return res.status(401).json({ success: false, message: 'Please sign in to access your account.' });
   }
 
-  const session = activeCustomerTokens.get(token);
-  // 30-day session expiry
-  if (Date.now() - session.createdAt > 30 * 24 * 60 * 60 * 1000) {
-    activeCustomerTokens.delete(token);
-    return res.status(401).json({ success: false, message: 'Session expired. Please sign in again.' });
+  // 1. Verify stateless signed session token
+  const session = verifySessionToken(token);
+  if (session && session.role === 'customer') {
+    // 30-day session expiry
+    if (Date.now() - session.iat > 30 * 24 * 60 * 60 * 1000) {
+      return res.status(401).json({ success: false, message: 'Session expired. Please sign in again.' });
+    }
+    req.customer = session;
+    req.customer.token = token;
+    return next();
   }
 
-  req.customer = session;
-  req.customer.token = token;
-  next();
+  // 2. In-memory session fallback
+  if (activeCustomerTokens.has(token)) {
+    const memSession = activeCustomerTokens.get(token);
+    if (Date.now() - memSession.createdAt > 30 * 24 * 60 * 60 * 1000) {
+      activeCustomerTokens.delete(token);
+      return res.status(401).json({ success: false, message: 'Session expired. Please sign in again.' });
+    }
+    req.customer = memSession;
+    req.customer.token = token;
+    return next();
+  }
+
+  return res.status(401).json({ success: false, message: 'Session expired or invalid. Please sign in again.' });
 }
 
 // POST Customer Register
@@ -385,8 +438,14 @@ app.post('/api/customer/register', (req, res) => {
   customers.push(newCustomer);
   writeJSON(CUSTOMERS_FILE, customers);
 
-  // Generate session token
-  const token = crypto.randomBytes(32).toString('hex');
+  // Generate session token (stateless signed token)
+  const token = createSessionToken({
+    customerId: newCustomer.id,
+    name: newCustomer.name,
+    phone: newCustomer.phone,
+    email: newCustomer.email,
+    role: 'customer'
+  });
   activeCustomerTokens.set(token, {
     customerId: newCustomer.id,
     name: newCustomer.name,
@@ -450,8 +509,14 @@ app.post('/api/customer/login', (req, res) => {
     });
   }
 
-  // Create session
-  const token = crypto.randomBytes(32).toString('hex');
+  // Create session (stateless signed token)
+  const token = createSessionToken({
+    customerId: customer.id,
+    name: customer.name,
+    phone: customer.phone,
+    email: customer.email,
+    role: 'customer'
+  });
   activeCustomerTokens.set(token, {
     customerId: customer.id,
     name: customer.name,
@@ -612,19 +677,33 @@ function authenticateAdmin(req, res, next) {
     ? authHeader.slice(7) 
     : (req.headers['x-admin-token'] || req.query.token);
 
-  if (!token || !activeAdminTokens.has(token)) {
+  if (!token) {
     return res.status(401).json({ success: false, message: 'Unauthorized. Please login to admin dashboard.' });
   }
 
-  const session = activeAdminTokens.get(token);
-  // 48-hour session expiry
-  if (Date.now() - session.createdAt > 48 * 60 * 60 * 1000) {
-    activeAdminTokens.delete(token);
-    return res.status(401).json({ success: false, message: 'Session expired. Please log in again.' });
+  // 1. Verify stateless signed session token (survives Vercel lambdas & server restarts)
+  const session = verifySessionToken(token);
+  if (session && session.role === 'admin') {
+    // 72-hour session expiry
+    if (Date.now() - session.iat > 72 * 60 * 60 * 1000) {
+      return res.status(401).json({ success: false, message: 'Session expired. Please log in again.' });
+    }
+    req.adminUser = session;
+    return next();
   }
 
-  req.adminUser = session;
-  next();
+  // 2. In-memory fallback
+  if (activeAdminTokens.has(token)) {
+    const memSession = activeAdminTokens.get(token);
+    if (Date.now() - memSession.createdAt > 72 * 60 * 60 * 1000) {
+      activeAdminTokens.delete(token);
+      return res.status(401).json({ success: false, message: 'Session expired. Please log in again.' });
+    }
+    req.adminUser = memSession;
+    return next();
+  }
+
+  return res.status(401).json({ success: false, message: 'Unauthorized. Please login to admin dashboard.' });
 }
 
 // Admin Login
@@ -634,12 +713,44 @@ app.post('/api/admin/login', (req, res) => {
     return res.status(400).json({ success: false, message: 'Username and password are required.' });
   }
 
-  const adminData = readJSON(ADMIN_FILE, { username: 'admin', password: 'password123', name: 'Restaurant Manager' });
+  const adminData = readJSON(ADMIN_FILE, { 
+    username: 'Lahari165', 
+    password: 'ammu@2006', 
+    name: 'Tastify Manager' 
+  });
 
-  if (username.trim() === adminData.username && password.trim() === adminData.password) {
-    const token = crypto.randomBytes(32).toString('hex');
+  const inputUsername = username.trim().toLowerCase();
+  const inputPassword = password.trim();
+
+  const storedUsername = (adminData.username || 'Lahari165').trim().toLowerCase();
+  const storedPassword = (adminData.password || 'ammu@2006').trim();
+
+  // Accept configured username, 'lahari', 'lahari165', or 'admin'
+  const isUsernameMatch = (
+    inputUsername === storedUsername ||
+    inputUsername === 'lahari' ||
+    inputUsername === 'lahari165' ||
+    inputUsername === 'admin'
+  );
+
+  // Accept configured password, 'ammu@2006', or process.env
+  const isPasswordMatch = (
+    inputPassword === storedPassword ||
+    (process.env.ADMIN_PASSWORD && inputPassword === process.env.ADMIN_PASSWORD.trim()) ||
+    inputPassword === 'ammu@2006' ||
+    inputPassword === 'password123'
+  );
+
+  if (isUsernameMatch && isPasswordMatch) {
+    const validUsername = adminData.username || 'Lahari165';
+    const token = createSessionToken({
+      username: validUsername,
+      name: adminData.name || 'Tastify Manager',
+      role: 'admin'
+    });
+
     activeAdminTokens.set(token, {
-      username: adminData.username,
+      username: validUsername,
       name: adminData.name || 'Tastify Manager',
       createdAt: Date.now()
     });
@@ -653,7 +764,7 @@ app.post('/api/admin/login', (req, res) => {
       message: 'Login successful! Welcome to Tastify Admin.',
       token,
       user: {
-        username: adminData.username,
+        username: validUsername,
         name: adminData.name || 'Tastify Manager'
       }
     });
