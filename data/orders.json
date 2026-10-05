@@ -1,0 +1,168 @@
+[
+  {
+    "orderId": "TAS-ORD-91240",
+    "customerName": "Suresh Varma",
+    "phone": "9848012345",
+    "deliveryType": "delivery",
+    "address": "Villa 14, Rainbow Meadows, Maisammaguda, Hyderabad - 500100",
+    "items": [
+      {
+        "id": "fry-piece-mandi",
+        "name": "Fry Piece Mandi",
+        "price": 320,
+        "quantity": 1,
+        "itemTotal": 320
+      },
+      {
+        "id": "belgium-shake",
+        "name": "Belgium Shake",
+        "price": 160,
+        "quantity": 2,
+        "itemTotal": 320
+      }
+    ],
+    "subtotal": 640,
+    "tax": 32,
+    "deliveryFee": 30,
+    "grandTotal": 702,
+    "specialInstructions": "Extra crispy fry pieces and spicy salata please",
+    "status": "Received",
+    "estimatedDeliveryTime": "Waiting for kitchen acceptance...",
+    "acceptedAt": null,
+    "createdAt": "5/10/2026, 01:50:00 pm"
+  },
+  {
+    "orderId": "TAS-ORD-82131",
+    "customerName": "Kavya Patel",
+    "phone": "9876543210",
+    "deliveryType": "delivery",
+    "address": "Flat 302, Green Valley Apts, Maisammaguda, Hyderabad - 500100",
+    "items": [
+      {
+        "id": "chicken-mandi",
+        "name": "Chicken Mandi",
+        "price": 280,
+        "quantity": 1,
+        "itemTotal": 280
+      }
+    ],
+    "subtotal": 280,
+    "tax": 14,
+    "deliveryFee": 30,
+    "grandTotal": 324,
+    "specialInstructions": "Mild spice for children",
+    "status": "Preparing",
+    "estimatedDeliveryTime": "30 mins",
+    "estimatedMinutes": 30,
+    "allottedAt": 1791188637210,
+    "targetDeliveryTimestamp": 1791190437210,
+    "targetDeliveryClockTime": "02:23 pm",
+    "acceptedAt": "5/10/2026, 02:00:00 pm",
+    "createdAt": "5/10/2026, 01:45:00 pm",
+    "updatedAt": "5/10/2026, 02:00:00 pm"
+  },
+  {
+    "orderId": "TAS-ORD-66976",
+    "customerName": "Vikram Reddy",
+    "phone": "9876543210",
+    "deliveryType": "delivery",
+    "address": "Flat 402, Sai Balaji Residency, Near Mallareddy Hospital, Maisammaguda, Hyderabad - 500100",
+    "items": [
+      {
+        "id": "chicken-mandi",
+        "name": "Chicken Mandi",
+        "price": 280,
+        "quantity": 1,
+        "itemTotal": 280
+      },
+      {
+        "id": "belgium-shake",
+        "name": "Belgium Shake",
+        "price": 160,
+        "quantity": 1,
+        "itemTotal": 160
+      }
+    ],
+    "subtotal": 440,
+    "tax": 22,
+    "deliveryFee": 30,
+    "grandTotal": 492,
+    "specialInstructions": "Please make salata extra spicy, ring door bell",
+    "status": "Preparing",
+    "estimatedDeliveryTime": "35 mins",
+    "acceptedAt": "5/10/2026, 12:37:47 am",
+    "createdAt": "5/10/2026, 12:37:46 am",
+    "updatedAt": "5/10/2026, 12:37:47 am"
+  },
+  {
+    "orderId": "TAS-ORD-64042",
+    "customerName": "sdf",
+    "phone": "asdf",
+    "deliveryType": "dine-in",
+    "address": "At Tastify Restaurant",
+    "items": [
+      {
+        "id": "chicken-mandi",
+        "name": "Chicken Mandi",
+        "price": 280,
+        "quantity": 1,
+        "itemTotal": 280
+      },
+      {
+        "id": "chicken-65-mandi",
+        "name": "Chicken 65 Mandi",
+        "price": 310,
+        "quantity": 1,
+        "itemTotal": 310
+      },
+      {
+        "id": "belgium-shake",
+        "name": "Belgium Shake",
+        "price": 160,
+        "quantity": 1,
+        "itemTotal": 160
+      }
+    ],
+    "subtotal": 750,
+    "tax": 38,
+    "deliveryFee": 0,
+    "grandTotal": 788,
+    "specialInstructions": "sd",
+    "status": "Preparing",
+    "createdAt": "4/10/2026, 11:54:24 pm",
+    "updatedAt": "5/10/2026, 12:16:35 am"
+  },
+  {
+    "orderId": "TAS-ORD-07395",
+    "customerName": "RahulRahul Sharma",
+    "phone": "9966888060",
+    "deliveryType": "dine-in",
+    "address": "At Tastify Restaurant",
+    "items": [
+      {
+        "id": "chicken-mandi",
+        "name": "Chicken Mandi",
+        "price": 280,
+        "quantity": 1,
+        "itemTotal": 280
+      },
+      {
+        "id": "chicken-65-mandi",
+        "name": "Chicken 65 Mandi",
+        "price": 310,
+        "quantity": 1,
+        "itemTotal": 310
+      }
+    ],
+    "subtotal": 590,
+    "tax": 30,
+    "deliveryFee": 0,
+    "grandTotal": 620,
+    "specialInstructions": "",
+    "status": "Preparing",
+    "createdAt": "4/10/2026, 11:11:47 pm",
+    "acceptedAt": "5/10/2026, 12:42:49 am",
+    "estimatedDeliveryTime": "30 mins",
+    "updatedAt": "5/10/2026, 12:42:49 am"
+  }
+]

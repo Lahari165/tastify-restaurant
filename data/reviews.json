@@ -1,0 +1,42 @@
+{
+  "rating": 4.3,
+  "reviewCount": 872,
+  "reviews": [
+    {
+      "id": 1,
+      "name": "Syed Rehan & Group",
+      "role": "Regular Mandi Enthusiast",
+      "rating": 5,
+      "text": "Best place to have fun with friends and family. Tasty food and a good environment. The Chicken Mandi platter portion is generous and perfect for group sharing.",
+      "dish": "Chicken Mandi",
+      "date": "Recent Visit"
+    },
+    {
+      "id": 2,
+      "name": "Karthik Reddy",
+      "role": "Maisammaguda Food Explorer",
+      "rating": 5,
+      "text": "The meat is cooked with heat and smoke, creating a flavorful and juicy dish. You can really taste the authenticity in their slow dum process. Worth every rupee!",
+      "dish": "Signature Mandi",
+      "date": "Verified Diner"
+    },
+    {
+      "id": 3,
+      "name": "Mohammed Farhan",
+      "role": "Local Guide",
+      "rating": 5,
+      "text": "Fry piece mandi is so good here. The crisp on the chicken pieces combined with the aromatic basmati rice and tomato salata is unbeatable in this area.",
+      "dish": "Fry Piece Mandi",
+      "date": "Verified Diner"
+    },
+    {
+      "id": 4,
+      "name": "Ananya Sharma",
+      "role": "Student, Mallareddy Campus",
+      "rating": 4.5,
+      "text": "Super pocket-friendly (just ₹200–₹400 per person) for such rich Arabian vibes! We celebrated our friend's birthday here, and the ambience was warm and vibrant.",
+      "dish": "Chicken 65 Mandi & Belgium Shake",
+      "date": "Verified Diner"
+    }
+  ]
+}

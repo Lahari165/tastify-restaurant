@@ -1,0 +1,237 @@
+{
+  "categories": [
+    {
+      "id": "all",
+      "label": "All Items",
+      "icon": "sparkle"
+    },
+    {
+      "id": "mandi",
+      "label": "Signature Mandi",
+      "icon": "flame"
+    },
+    {
+      "id": "starters",
+      "label": "Starters",
+      "icon": "plate"
+    },
+    {
+      "id": "main",
+      "label": "Main Course",
+      "icon": "curry"
+    },
+    {
+      "id": "desserts",
+      "label": "Desserts",
+      "icon": "dessert"
+    },
+    {
+      "id": "beverages",
+      "label": "Beverages",
+      "icon": "drink"
+    }
+  ],
+  "items": [
+    {
+      "id": "chicken-mandi",
+      "name": "Chicken Mandi",
+      "nameTelugu": "చికెన్ మంది",
+      "category": "mandi",
+      "isVeg": false,
+      "isPopular": true,
+      "isSignature": true,
+      "price": 280,
+      "priceDisplay": "₹280",
+      "priceRange": "₹220 – ₹380",
+      "portion": "Single / Double / Full Platter",
+      "description": "The crown jewel of Tastify. Slow-steamed spiced basmati rice infused with whole Arabian aromatics, crowned with tender roasted chicken, fried cashews, raisins, and golden caramelized onions. Served with traditional spicy tomato salata and cool mint raita.",
+      "image": "assets/images/hero-mandi.jpg",
+      "tags": [
+        "Signature",
+        "Slow-Cooked",
+        "Must Try"
+      ],
+      "isAvailable": true
+    },
+    {
+      "id": "chicken-65-mandi",
+      "name": "Chicken 65 Mandi",
+      "nameTelugu": "చికెన్ 65 మంది",
+      "category": "mandi",
+      "isVeg": false,
+      "isPopular": true,
+      "isSignature": false,
+      "price": 310,
+      "priceDisplay": "₹310",
+      "priceRange": "₹240 – ₹390",
+      "portion": "Single / Double / Family Platter",
+      "description": "The bold fusion favorite! Crispy, punchy, deep-crimson Chicken 65 bites tossed with curry leaves and green chilies, served generously over a smoking bed of fragrant mandi basmati rice.",
+      "image": "assets/images/chicken-65-mandi.jpg",
+      "tags": [
+        "Spicy Favorite",
+        "Crispy",
+        "Popular"
+      ]
+    },
+    {
+      "id": "fry-piece-mandi",
+      "name": "Fry Piece Mandi",
+      "nameTelugu": "ఫ్రై పీస్ మంది",
+      "category": "mandi",
+      "isVeg": false,
+      "isPopular": true,
+      "isSignature": false,
+      "price": 320,
+      "priceDisplay": "₹320",
+      "priceRange": "₹250 – ₹390",
+      "portion": "Single / Double / Family Platter",
+      "description": "Beloved Hyderabadi-style fry piece chicken — marinated in fiery ground spices and shallow-fried to crispy perfection, resting atop delicate Arabian long-grain rice with roasted nuts.",
+      "image": "assets/images/fry-piece-mandi.jpg",
+      "tags": [
+        "Crowd Favorite",
+        "Crispy Fry",
+        "Rich Spice"
+      ]
+    },
+    {
+      "id": "extra-rice",
+      "name": "Extra Mandi Rice",
+      "nameTelugu": "ఎక్స్‌ట్రా మంది రైస్",
+      "category": "mandi",
+      "isVeg": true,
+      "isPopular": false,
+      "isSignature": false,
+      "price": 120,
+      "priceDisplay": "₹120",
+      "priceRange": "₹100 – ₹150",
+      "portion": "Per Portion",
+      "description": "Extra serving of our signature slow-simmered, saffron-infused long-grain Mandi rice topped with crunchy caramelized onions, almonds, and raisins.",
+      "image": "assets/images/extra-rice.jpg",
+      "tags": [
+        "Aromatic",
+        "Side",
+        "Mandi Basmati"
+      ]
+    },
+    {
+      "id": "chicken-majestic",
+      "name": "Chicken Majestic",
+      "nameTelugu": "చికెన్ మెజెస్టిక్",
+      "category": "starters",
+      "isVeg": false,
+      "isPopular": true,
+      "isSignature": false,
+      "price": 240,
+      "priceDisplay": "₹240",
+      "priceRange": "₹220 – ₹280",
+      "portion": "Appetizer Plate",
+      "description": "Tender boneless chicken strips stir-fried in a silky spiced yogurt emulsion with freshly crushed garlic, fragrant mint leaves, green chilies, and tempered curry leaves.",
+      "image": "assets/images/chicken-majestic.jpg",
+      "tags": [
+        "Starter",
+        "Hyderabadi Classic",
+        "Zesty"
+      ]
+    },
+    {
+      "id": "chicken-65",
+      "name": "Chicken 65",
+      "nameTelugu": "చికెన్ 65 (స్టార్టర్)",
+      "category": "starters",
+      "isVeg": false,
+      "isPopular": true,
+      "isSignature": false,
+      "price": 220,
+      "priceDisplay": "₹220",
+      "priceRange": "₹200 – ₹260",
+      "portion": "Appetizer Plate",
+      "description": "The timeless South Indian starter with crisp bite, marinated in traditional spices, ginger-garlic paste, red chili, and fried to golden perfection with lemon wedges.",
+      "image": "assets/images/chicken-65-mandi.jpg",
+      "tags": [
+        "Crispy",
+        "Spicy",
+        "Classic"
+      ]
+    },
+    {
+      "id": "paneer-butter-masala",
+      "name": "Paneer Butter Masala",
+      "nameTelugu": "పన్నీర్ బటర్ మసాలా",
+      "category": "main",
+      "isVeg": true,
+      "isPopular": true,
+      "isSignature": false,
+      "price": 230,
+      "priceDisplay": "₹230",
+      "priceRange": "₹220 – ₹270",
+      "portion": "Curry Bowl (Serves 2)",
+      "description": "Melt-in-your-mouth cottage cheese cubes simmered gently in a velvety, buttery tomato-cashew makhani gravy, finished with fresh dairy cream and dried fenugreek leaves.",
+      "image": "assets/images/paneer-butter-masala.jpg",
+      "tags": [
+        "Vegetarian",
+        "Rich Gravy",
+        "Creamy"
+      ]
+    },
+    {
+      "id": "belgium-shake",
+      "name": "Belgium Shake",
+      "nameTelugu": "బెల్జియం షేక్",
+      "category": "beverages",
+      "isVeg": true,
+      "isPopular": true,
+      "isSignature": false,
+      "price": 160,
+      "priceDisplay": "₹160",
+      "priceRange": "₹140 – ₹190",
+      "portion": "Tall Chilled Glass",
+      "description": "Thick, indulgent premium milkshake crafted with Belgian dark cocoa, artisanal chocolate ganache swirls, topped with whipped cream and crisp chocolate curls.",
+      "image": "assets/images/belgium-shake.jpg",
+      "tags": [
+        "Beverage",
+        "Decadent",
+        "Chilled"
+      ]
+    },
+    {
+      "id": "chocolate-fudge",
+      "name": "Chocolate Fudge",
+      "nameTelugu": "చాక్లెట్ ఫడ్జ్",
+      "category": "desserts",
+      "isVeg": true,
+      "isPopular": true,
+      "isSignature": false,
+      "price": 170,
+      "priceDisplay": "₹170",
+      "priceRange": "₹150 – ₹200",
+      "portion": "Sizzling Platter",
+      "description": "Warm, gooey dark chocolate brownie served with a velvety scoop of vanilla bean ice cream, smothered in steaming molten fudge sauce and roasted walnuts.",
+      "image": "assets/images/chocolate-fudge.jpg",
+      "tags": [
+        "Dessert",
+        "Hot & Cold",
+        "Sweet Sensation"
+      ]
+    },
+    {
+      "id": "ice-cream-sundaes",
+      "name": "Ice Cream Sundaes",
+      "nameTelugu": "ఐస్ క్రీమ్ సండేస్",
+      "category": "desserts",
+      "isVeg": true,
+      "isPopular": false,
+      "isSignature": false,
+      "price": 150,
+      "priceDisplay": "₹150",
+      "priceRange": "₹130 – ₹180",
+      "portion": "Crystal Sundae Glass",
+      "description": "Classic multi-scoop dessert served in a crystal coupe, layered with handcrafted syrups, crushed roasted nuts, fresh fruit coulis, and a crunchy wafer crisp.",
+      "image": "assets/images/ice-cream-sundae.jpg",
+      "tags": [
+        "Refreshing",
+        "Sweet",
+        "Family Treat"
+      ]
+    }
+  ]
+}

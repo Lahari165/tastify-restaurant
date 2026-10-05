@@ -1,0 +1,32 @@
+[
+  {
+    "id": "CUST-1001",
+    "name": "Rahul Sharma",
+    "phone": "9876543210",
+    "email": "rahul@tastify.in",
+    "passwordHash": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8",
+    "salt": "a1b2c3d4e5f6",
+    "address": {
+      "line1": "Flat 302, Green Meadows",
+      "landmark": "Near Malla Reddy College Arch",
+      "area": "Maisammaguda, Hyderabad (500100)"
+    },
+    "createdAt": "2026-10-01T10:00:00.000Z",
+    "lastLogin": "2026-10-05T08:30:00.000Z"
+  },
+  {
+    "id": "CUST-248857",
+    "name": "Lahari Gunti",
+    "phone": "9849574288",
+    "email": "guntilahari970@gmail.com",
+    "passwordHash": "0fe31b7c1f401d84a54ef51525edcb2a247b0a707c2012919eb38fb9e3e9c9d255761c947b077b7df2d35c6a719cee0a11372d11e409506e628b6a3fa5896be5",
+    "salt": "da679ab3e635b15fb69cd69866646f24",
+    "address": {
+      "line1": "",
+      "landmark": "",
+      "area": "Maisammaguda, Hyderabad (500100)"
+    },
+    "createdAt": "2026-10-05T09:07:28.857Z",
+    "lastLogin": "2026-10-05T09:07:28.858Z"
+  }
+]

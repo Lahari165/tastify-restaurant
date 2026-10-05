@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tastify Admin — Restaurant Management &amp; Live Orders</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Noto+Sans+Telugu:wght@400;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <!-- Custom Admin Styles -->
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body class="admin-body">
+
+  <!-- ========================================================================
+       1. Authentication / Login Overlay (Shown when unauthenticated)
+       ======================================================================== -->
+  <div id="admin-login-screen" class="login-wrapper">
+    <div class="login-backdrop">
+      <div class="glow-orb orb-1"></div>
+      <div class="glow-orb orb-2"></div>
+    </div>
+
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-brand-icon">
+          <i class="fa-solid fa-crown"></i>
+        </div>
+        <h1 class="login-title">TASTIFY<span>.</span></h1>
+        <p class="login-telugu">టేస్టిఫై • అడ్మిన్ పోర్టల్</p>
+        <p class="login-subtitle">Manager &amp; Kitchen Portal</p>
+      </div>
+
+      <div id="login-alert" class="admin-alert" style="display: none;"></div>
+
+      <form id="admin-login-form" class="login-form">
+        <div class="form-group">
+          <label for="admin-username">Username</label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-user"></i>
+            <input type="text" id="admin-username" class="admin-input" placeholder="Enter your username" required autocomplete="username" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="admin-password">Password</label>
+          <div class="input-with-icon">
+            <i class="fa-solid fa-lock"></i>
+            <input type="password" id="admin-password" class="admin-input" placeholder="Enter password" required autocomplete="current-password" />
+            <button type="button" id="toggle-password-btn" class="toggle-pwd-btn" aria-label="Toggle password visibility">
+              <i class="fa-regular fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="login-options">
+          <label class="remember-label">
+            <input type="checkbox" id="remember-me" checked />
+            <span>Remember login session</span>
+          </label>
+        </div>
+
+        <button type="submit" id="btn-login-submit" class="btn-admin-primary btn-block">
+          <span>Sign In to Dashboard</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </form>
+
+      <div class="login-footer">
+        <a href="/" class="login-back-link">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Back to Restaurant Website</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================================================
+       2. Main Admin Dashboard Container (Shown when authenticated)
+       ======================================================================== -->
+  <div id="admin-dashboard-app" class="dashboard-container" style="display: none;">
+
+    <!-- Sidebar Navigation -->
+    <aside class="admin-sidebar" id="admin-sidebar">
+      <div class="sidebar-header">
+        <a href="/" class="sidebar-brand" target="_blank" title="Open Tastify Storefront">
+          <div class="brand-badge-icon">
+            <i class="fa-solid fa-fire-burner"></i>
+          </div>
+          <div class="brand-text">
+            <span class="brand-title">TASTIFY<span>.</span></span>
+            <span class="brand-tag">Restaurant Admin</span>
+          </div>
+        </a>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button type="button" class="nav-item active" data-tab="orders">
+          <i class="fa-solid fa-bell-concierge"></i>
+          <span>Live Orders</span>
+          <span id="badge-pending-orders" class="nav-badge" style="display: none;">0</span>
+        </button>
+
+        <button type="button" class="nav-item" data-tab="menu">
+          <i class="fa-solid fa-utensils"></i>
+          <span>Menu &amp; Dishes</span>
+          <span id="badge-menu-count" class="nav-badge-subtle">0</span>
+        </button>
+
+        <button type="button" class="nav-item" data-tab="reservations">
+          <i class="fa-solid fa-calendar-check"></i>
+          <span>Table Bookings</span>
+          <span id="badge-res-count" class="nav-badge-subtle">0</span>
+        </button>
+
+        <button type="button" class="nav-item" data-tab="settings">
+          <i class="fa-solid fa-key"></i>
+          <span>Admin Security</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="live-sync-indicator">
+          <span class="pulse-dot"></span>
+          <span class="sync-text">Live Auto-Sync Active</span>
+        </div>
+        <a href="/" target="_blank" class="sidebar-storefront-btn">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          <span>View Customer Site</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="dashboard-main">
+      
+      <!-- Top Bar Header -->
+      <header class="dashboard-header">
+        <div class="header-left">
+          <button type="button" id="sidebar-toggle" class="sidebar-toggle-btn" aria-label="Toggle Navigation">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div class="header-page-title">
+            <h2 id="current-tab-heading">Customer Orders &amp; Kitchen</h2>
+            <p id="current-tab-sub">Real-time incoming orders, preparation status &amp; customer alerts</p>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <!-- Audio Toggle for New Order Beep -->
+          <button type="button" id="btn-toggle-sound" class="header-icon-btn active" title="Audio Chime on New Orders">
+            <i class="fa-solid fa-volume-high"></i>
+          </button>
+
+          <!-- Manual Refresh Button -->
+          <button type="button" id="btn-refresh-data" class="header-icon-btn" title="Refresh Data Now">
+            <i class="fa-solid fa-arrows-rotate"></i>
+          </button>
+
+          <!-- User Profile & Logout -->
+          <div class="admin-profile-pill">
+            <div class="profile-avatar">
+              <i class="fa-solid fa-user-shield"></i>
+            </div>
+            <div class="profile-meta">
+              <span id="header-user-name" class="profile-name">Tastify Manager</span>
+              <span id="header-user-handle" class="profile-role">@admin</span>
+            </div>
+            <button type="button" id="btn-logout" class="btn-logout" title="Sign Out">
+              <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Stats Overview Banner -->
+      <section class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon revenue">
+            <i class="fa-solid fa-indian-rupee-sign"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Total Revenue</span>
+            <h3 id="stat-revenue" class="stat-val">₹0</h3>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon pending">
+            <i class="fa-solid fa-fire"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Pending In Kitchen</span>
+            <h3 id="stat-pending" class="stat-val">0</h3>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon ready">
+            <i class="fa-solid fa-box-check"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Ready / Dispatched</span>
+            <h3 id="stat-ready" class="stat-val">0</h3>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon dishes">
+            <i class="fa-solid fa-bowl-food"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Menu Dishes</span>
+            <h3 id="stat-dishes" class="stat-val">0</h3>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon bookings">
+            <i class="fa-solid fa-users"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Table Bookings</span>
+            <h3 id="stat-reservations" class="stat-val">0</h3>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab Content Area -->
+      <main class="dashboard-body">
+
+        <!-- ==================================================================
+             TAB 1: LIVE ORDERS
+             ================================================================== -->
+        <section id="tab-orders" class="tab-pane active">
+          <div class="tab-toolbar">
+            <div class="filter-pills">
+              <button type="button" class="filter-pill active" data-order-filter="all">All Orders (<span id="count-all-orders">0</span>)</button>
+              <button type="button" class="filter-pill pill-received" data-order-filter="Received">New / Received (<span id="count-received-orders">0</span>)</button>
+              <button type="button" class="filter-pill pill-preparing" data-order-filter="Preparing">In Kitchen (<span id="count-preparing-orders">0</span>)</button>
+              <button type="button" class="filter-pill pill-ready" data-order-filter="Ready">Ready (<span id="count-ready-orders">0</span>)</button>
+              <button type="button" class="filter-pill pill-delivered" data-order-filter="Delivered">Delivered (<span id="count-delivered-orders">0</span>)</button>
+              <button type="button" class="filter-pill pill-cancelled" data-order-filter="Cancelled">Cancelled (<span id="count-cancelled-orders">0</span>)</button>
+            </div>
+
+            <div class="toolbar-search">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="order-search-input" class="admin-input-sm" placeholder="Search by Order ID, Customer name or Phone..." />
+            </div>
+          </div>
+
+          <!-- Orders Grid Container -->
+          <div id="orders-list-container" class="orders-grid">
+            <div class="admin-empty-state">
+              <i class="fa-solid fa-spinner fa-spin"></i>
+              <p>Loading live customer orders...</p>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ==================================================================
+             TAB 2: MENU & DISHES MANAGER
+             ================================================================== -->
+        <section id="tab-menu" class="tab-pane">
+          <div class="tab-toolbar">
+            <div class="menu-filters-wrap">
+              <div class="category-select-wrap">
+                <i class="fa-solid fa-filter"></i>
+                <select id="menu-category-filter" class="admin-select">
+                  <option value="all">All Categories</option>
+                  <option value="mandi">Signature Mandi</option>
+                  <option value="starters">Starters &amp; Kebabs</option>
+                  <option value="main">Main Course</option>
+                  <option value="desserts">Desserts</option>
+                  <option value="beverages">Beverages &amp; Shakes</option>
+                </select>
+              </div>
+
+              <div class="toolbar-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="menu-search-input" class="admin-input-sm" placeholder="Search dish name..." />
+              </div>
+            </div>
+
+            <button type="button" id="btn-open-add-dish" class="btn-admin-primary">
+              <i class="fa-solid fa-plus"></i>
+              <span>Add New Dish</span>
+            </button>
+          </div>
+
+          <!-- Menu Items Grid -->
+          <div id="menu-items-grid" class="menu-admin-grid">
+            <div class="admin-empty-state">
+              <i class="fa-solid fa-spinner fa-spin"></i>
+              <p>Loading menu items...</p>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ==================================================================
+             TAB 3: TABLE RESERVATIONS
+             ================================================================== -->
+        <section id="tab-reservations" class="tab-pane">
+          <div class="tab-toolbar">
+            <div class="toolbar-title-wrap">
+              <h3>Table Bookings &amp; Floor Majlis</h3>
+              <p>Manage customer table reservations, arrival times, and guest seating</p>
+            </div>
+
+            <div class="toolbar-search">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="res-search-input" class="admin-input-sm" placeholder="Search guest name or phone..." />
+            </div>
+          </div>
+
+          <div id="reservations-list-container" class="reservations-grid">
+            <div class="admin-empty-state">
+              <i class="fa-solid fa-calendar-xmark"></i>
+              <p>No table reservations yet.</p>
+            </div>
+          </div>
+        </section>
+
+
+        <!-- ==================================================================
+             TAB 4: ADMIN CREDENTIALS & SECURITY SETTINGS
+             ================================================================== -->
+        <section id="tab-settings" class="tab-pane">
+          <div class="settings-container">
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <div class="settings-header-icon">
+                  <i class="fa-solid fa-key"></i>
+                </div>
+                <div>
+                  <h3>Change Admin Username &amp; Password</h3>
+                  <p>Customize your login credentials to secure your restaurant admin portal</p>
+                </div>
+              </div>
+
+              <div id="security-alert" class="admin-alert" style="display: none;"></div>
+
+              <form id="change-credentials-form" class="settings-form">
+                <div class="form-group">
+                  <label for="current-password">Current Password <span class="required">*</span></label>
+                  <div class="input-with-icon">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="current-password" class="admin-input" placeholder="Enter your current password" required />
+                  </div>
+                  <span class="form-hint">Required to verify authorized manager identity</span>
+                </div>
+
+                <div class="form-row-2">
+                  <div class="form-group">
+                    <label for="new-username">New Username</label>
+                    <div class="input-with-icon">
+                      <i class="fa-solid fa-user-pen"></i>
+                      <input type="text" id="new-username" class="admin-input" placeholder="Leave blank to keep current" />
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="new-display-name">Manager Display Name</label>
+                    <div class="input-with-icon">
+                      <i class="fa-solid fa-id-card"></i>
+                      <input type="text" id="new-display-name" class="admin-input" placeholder="e.g. Tastify Manager" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-row-2">
+                  <div class="form-group">
+                    <label for="new-password">New Password</label>
+                    <div class="input-with-icon">
+                      <i class="fa-solid fa-shield-keyhole"></i>
+                      <input type="password" id="new-password" class="admin-input" placeholder="Minimum 6 characters" />
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="confirm-new-password">Confirm New Password</label>
+                    <div class="input-with-icon">
+                      <i class="fa-solid fa-check-double"></i>
+                      <input type="password" id="confirm-new-password" class="admin-input" placeholder="Re-type new password" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-actions-right">
+                  <button type="submit" id="btn-save-credentials" class="btn-admin-primary">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    <span>Save &amp; Update Credentials</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Server & Environment Information Card -->
+            <div class="settings-card info-card">
+              <div class="settings-card-header">
+                <div class="settings-header-icon gold">
+                  <i class="fa-solid fa-circle-info"></i>
+                </div>
+                <div>
+                  <h3>System Status &amp; Information</h3>
+                  <p>Tastify Arabian Mandi &amp; Restaurant Backend details</p>
+                </div>
+              </div>
+
+              <div class="system-info-list">
+                <div class="info-row">
+                  <span class="info-key">Server URL:</span>
+                  <span class="info-val">http://localhost:3000</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-key">Admin Access Route:</span>
+                  <span class="info-val">http://localhost:3000/admin</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-key">Database Storage:</span>
+                  <span class="info-val">Local JSON Store (data/admin.json, data/orders.json, data/menu.json)</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-key">Official WhatsApp:</span>
+                  <span class="info-val">+91 99668 88060</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-key">Restaurant Location:</span>
+                  <span class="info-val">HF63+X22, Maisammaguda, Bhadurpalle, Hyderabad, Telangana 500100</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+
+  <!-- ========================================================================
+       MODAL: Add / Edit Dish
+       ======================================================================== -->
+  <div id="dish-modal" class="admin-modal-backdrop" role="dialog" aria-modal="true" style="display: none;">
+    <div class="admin-modal-card">
+      <div class="modal-header">
+        <h3 id="dish-modal-title">Add New Dish to Menu</h3>
+        <button type="button" id="btn-close-dish-modal" class="modal-close" aria-label="Close modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="dish-form" class="dish-modal-form">
+        <input type="hidden" id="dish-edit-id" />
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="dish-name">Dish Name (English) <span class="required">*</span></label>
+            <input type="text" id="dish-name" class="admin-input" placeholder="e.g. Juicy Mutton Mandi" required />
+          </div>
+
+          <div class="form-group">
+            <label for="dish-name-telugu">Telugu Name</label>
+            <input type="text" id="dish-name-telugu" class="admin-input" placeholder="e.g. జ్యూసీ మటన్ మంది" />
+          </div>
+        </div>
+
+        <div class="form-row-3">
+          <div class="form-group">
+            <label for="dish-category">Category <span class="required">*</span></label>
+            <select id="dish-category" class="admin-select" required>
+              <option value="mandi">Signature Mandi</option>
+              <option value="starters">Starters &amp; Kebabs</option>
+              <option value="main">Main Course</option>
+              <option value="desserts">Desserts</option>
+              <option value="beverages">Beverages &amp; Shakes</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="dish-price">Price (₹) <span class="required">*</span></label>
+            <input type="number" id="dish-price" class="admin-input" placeholder="280" min="10" required />
+          </div>
+
+          <div class="form-group">
+            <label for="dish-portion">Portion / Serving</label>
+            <input type="text" id="dish-portion" class="admin-input" placeholder="Single / Double" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="dish-desc">Dish Description <span class="required">*</span></label>
+          <textarea id="dish-desc" class="admin-textarea" rows="3" placeholder="Describe the flavors, spices, and accompaniments..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="dish-image">Image URL or Preset Path</label>
+          <div class="input-with-preview">
+            <input type="text" id="dish-image" class="admin-input" placeholder="assets/images/hero-mandi.jpg" value="assets/images/hero-mandi.jpg" />
+            <div class="image-preview-box">
+              <img id="dish-image-preview" src="assets/images/hero-mandi.jpg" alt="Preview" />
+            </div>
+          </div>
+
+          <!-- Quick Preset Images Pill Selector -->
+          <div class="image-presets-wrap">
+            <span class="presets-label">Quick Presets:</span>
+            <button type="button" class="preset-pill" data-img="assets/images/hero-mandi.jpg">Chicken Mandi</button>
+            <button type="button" class="preset-pill" data-img="assets/images/fry-piece-mandi.jpg">Fry Piece</button>
+            <button type="button" class="preset-pill" data-img="assets/images/chicken-65-mandi.jpg">Chicken 65</button>
+            <button type="button" class="preset-pill" data-img="assets/images/chicken-majestic.jpg">Majestic</button>
+            <button type="button" class="preset-pill" data-img="assets/images/belgium-shake.jpg">Belgium Shake</button>
+            <button type="button" class="preset-pill" data-img="assets/images/chocolate-fudge.jpg">Dessert</button>
+            <button type="button" class="preset-pill" data-img="assets/images/paneer-butter-masala.jpg">Veg Curry</button>
+          </div>
+        </div>
+
+        <div class="checkbox-row">
+          <label class="admin-checkbox">
+            <input type="checkbox" id="dish-is-veg" />
+            <span>Pure Vegetarian</span>
+          </label>
+
+          <label class="admin-checkbox">
+            <input type="checkbox" id="dish-is-signature" />
+            <span>Chef's Signature</span>
+          </label>
+
+          <label class="admin-checkbox">
+            <input type="checkbox" id="dish-is-popular" checked />
+            <span>Popular / Best Seller</span>
+          </label>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="btn-cancel-dish" class="btn-admin-secondary">Cancel</button>
+          <button type="submit" id="btn-save-dish" class="btn-admin-primary">
+            <i class="fa-solid fa-check"></i>
+            <span>Save Dish</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ========================================================================
+       MODAL: Thermal Kitchen Receipt / KOT Print
+       ======================================================================== -->
+  <div id="kot-modal" class="admin-modal-backdrop" role="dialog" aria-modal="true" style="display: none;">
+    <div class="admin-modal-card kot-modal-card">
+      <div class="modal-header">
+        <h3>Kitchen Order Ticket (KOT)</h3>
+        <button type="button" id="btn-close-kot-modal" class="modal-close" aria-label="Close modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="kot-receipt-body" id="kot-receipt-content">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" id="btn-cancel-kot" class="btn-admin-secondary">Close</button>
+        <button type="button" id="btn-print-kot" class="btn-admin-primary">
+          <i class="fa-solid fa-print"></i>
+          <span>Print Receipt</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL: Update / Edit Delivery Time (In-theme Obsidian & Gold)
+       ======================================================================== -->
+  <div id="edit-time-modal" class="admin-modal-backdrop" role="dialog" aria-modal="true" style="display: none;">
+    <div class="admin-modal-card edit-time-modal-card">
+      <div class="modal-header">
+        <div class="modal-header-icon-title">
+          <div class="header-gold-icon">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+          </div>
+          <div>
+            <h3>Adjust Delivery Time</h3>
+            <p id="edit-time-order-subtitle" class="modal-sub">Order #TAS-ORD-00000</p>
+          </div>
+        </div>
+        <button type="button" id="btn-close-edit-time" class="modal-close" aria-label="Close modal">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="edit-time-modal-body">
+        <div class="order-quick-info-pill">
+          <div class="info-pill-item">
+            <span class="label">Customer:</span>
+            <strong id="edit-time-customer-name">Rahul</strong>
+          </div>
+          <div class="info-pill-item">
+            <span class="label">Current Status:</span>
+            <span id="edit-time-status-pill" class="badge-status-pill">Preparing</span>
+          </div>
+          <div class="info-pill-item">
+            <span class="label">Current Allotment:</span>
+            <span id="edit-time-current-val" class="text-gold">30 mins</span>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 1.25rem;">
+          <label class="form-label-gold">Quick Preset Minutes:</label>
+          <div class="edit-modal-presets-grid">
+            <button type="button" class="btn-time-choice" data-time="15 mins">15 Mins</button>
+            <button type="button" class="btn-time-choice" data-time="20 mins">20 Mins</button>
+            <button type="button" class="btn-time-choice" data-time="25 mins">25 Mins</button>
+            <button type="button" class="btn-time-choice active" data-time="30 mins">30 Mins</button>
+            <button type="button" class="btn-time-choice" data-time="40 mins">40 Mins</button>
+            <button type="button" class="btn-time-choice" data-time="50 mins">50 Mins</button>
+            <button type="button" class="btn-time-choice" data-time="60 mins">60 Mins</button>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 1rem;">
+          <label for="edit-time-custom-input" class="form-label-gold">Or Enter Custom Time / Minutes:</label>
+          <div class="custom-time-input-wrap">
+            <input type="text" id="edit-time-custom-input" class="admin-input" placeholder="e.g. 35 mins or 45 mins" value="30 mins" />
+            <span class="input-addon-icon"><i class="fa-solid fa-stopwatch"></i></span>
+          </div>
+          <span class="helper-text">Timer runs automatically second-by-second across admin &amp; customer live tracking.</span>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" id="btn-cancel-edit-time" class="btn-admin-secondary">Cancel</button>
+        <button type="button" id="btn-save-edit-time" class="btn-admin-primary">
+          <i class="fa-solid fa-check"></i>
+          <span>Save &amp; Start Timer</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio element for new order chime (also synthesized with Web Audio API) -->
+  <div id="toast-container" class="admin-toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="js/admin.js"></script>
+</body>
+</html>
