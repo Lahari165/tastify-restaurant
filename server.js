@@ -43,29 +43,41 @@ function hashPassword(password, salt) {
   return crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
 }
 
-// Helper to read JSON safely
+// Helper to read JSON safely (with /tmp fallback for serverless environments)
 function readJSON(file, fallback = {}) {
   try {
+    const tmpPath = path.join('/tmp', path.basename(file));
+    if (fs.existsSync(tmpPath)) {
+      const data = fs.readFileSync(tmpPath, 'utf8');
+      return JSON.parse(data);
+    }
     if (fs.existsSync(file)) {
       const data = fs.readFileSync(file, 'utf8');
       return JSON.parse(data);
     }
   } catch (err) {
-    console.error(`Error reading ${file}:`, err);
+    console.error(`Error reading ${file}:`, err.message);
   }
   return fallback;
 }
 
-// Helper to write JSON safely
+// Helper to write JSON safely (with /tmp fallback for serverless environments)
 function writeJSON(file, data) {
   try {
     fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
     return true;
   } catch (err) {
-    console.error(`Error writing ${file}:`, err);
-    return false;
+    try {
+      const tmpPath = path.join('/tmp', path.basename(file));
+      fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), 'utf8');
+      return true;
+    } catch (tmpErr) {
+      console.error(`Error writing ${file} (and /tmp fallback):`, tmpErr.message);
+      return false;
+    }
   }
 }
+
 
 // --------------------------------------------------------------------------
 // API Routes
@@ -936,18 +948,24 @@ process.on('uncaughtException', (err) => {
   console.error('Handled server exception:', err.message);
 });
 
-// Start Server
-const server = app.listen(PORT, () => {
-  console.log(`\nWebsite URL: http://localhost:${PORT}\n`);
-});
+// Start Server when executed directly (local, Render, VPS)
+if (require.main === module) {
+  const server = app.listen(PORT, () => {
+    console.log(`\nWebsite URL: http://localhost:${PORT}\n`);
+  });
 
-server.on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    console.error(`\n⚠️ Port ${PORT} is already in use by another process.`);
-    console.log(`💡 To free it in Windows PowerShell, run:`);
-    console.log(`   Stop-Process -Id (Get-NetTCPConnection -LocalPort ${PORT}).OwningProcess -Force`);
-    console.log(`   or run on another port: $env:PORT="3001"; npm start\n`);
-  } else {
-    console.error('Server error:', err);
-  }
-});
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`\n⚠️ Port ${PORT} is already in use by another process.`);
+      console.log(`💡 To free it in Windows PowerShell, run:`);
+      console.log(`   Stop-Process -Id (Get-NetTCPConnection -LocalPort ${PORT}).OwningProcess -Force`);
+      console.log(`   or run on another port: $env:PORT="3001"; npm start\n`);
+    } else {
+      console.error('Server error:', err);
+    }
+  });
+}
+
+// Export Express app for Vercel Serverless Functions
+module.exports = app;
+
